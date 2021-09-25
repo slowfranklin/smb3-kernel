@@ -133,7 +133,15 @@ int ksmbd_lookup_protocol_idx(char *str)
 int ksmbd_verify_smb_message(struct ksmbd_work *work)
 {
 	struct smb2_hdr *smb2_hdr = ksmbd_req_buf_next(work);
+	unsigned int buflen = ksmbd_smb2_cur_pdu_buflen(work);
 	struct smb_hdr *hdr;
+
+	/*
+	 * ksmbd_smb2_check_message() will verify all SMB2 PDU buffer sizes,
+	 * here we just check we can access the ProtocolId field in the header.
+	 */
+	if (buflen < sizeof(smb2_hdr->ProtocolId))
+		return -EINVAL;
 
 	if (smb2_hdr->ProtocolId == SMB2_PROTO_NUMBER)
 		return ksmbd_smb2_check_message(work);
